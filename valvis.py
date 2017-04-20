@@ -22,16 +22,21 @@ import sys
 import getopt
 import json
 import os
+import shutil
+from datetime import datetime as date
 
 MAJOR = 1
 MINOR = 0
 FIX = 0
 
-CONFIG = {}
-HOME = ""
-CONFIG_FOLDER = ""
+'''string representation of the version'''
+VERSION = "{0}.{1}.{2}".format(MAJOR,MINOR,FIX)
+
+CONFIG = None
+HOME = None
+CONFIG_FOLDER = None
 CONFIG_FILE = "config.json"
-CONFIG_FILE_PATH = ""
+CONFIG_FILE_PATH = None
 
 def checkNoParamError(index, opts):
     if index > len(opts):
@@ -40,8 +45,17 @@ def checkNoParamError(index, opts):
         sys.exit(1)
 
 def createDefaultConfig():
-    #TODO: ask user for other infos
-    defaultConfig = {"projects_path" : HOME+"/Documents/valvis"}
+    defaultProjectPath = os.path.join(HOME,"Documents/valvis");
+
+    userName =    input("enter your username (optional, leave blank if unwanted): ")
+    userEmail =   input("enter your email (optional, leave blank if unwanted): ")
+    projectPath = input("enter a custom project path (default to '"+defaultProjectPath+"' if left empty): ")
+    libraryPath = input("enter the full path to your library (optional, leave blank if unwanted): ")
+
+    if projectPath == "":
+        projectPath = defaultProjectPath
+
+    defaultConfig = {"user_name" : userName, "user_email" : userEmail, "projects_path" : projectPath, "library_path" : libraryPath}
     json.dump(defaultConfig,open(CONFIG_FILE_PATH, "w+"))
 
 def loadConfig():
@@ -51,8 +65,8 @@ def loadConfig():
     global CONFIG_FILE_PATH
 
     HOME = os.path.expanduser("~")
-    CONFIG_FOLDER = HOME+"/.config/valvis"
-    CONFIG_FILE_PATH = CONFIG_FOLDER+"/"+CONFIG_FILE
+    CONFIG_FOLDER = os.path.join(HOME,".config/valvis")
+    CONFIG_FILE_PATH = os.path.join(CONFIG_FOLDER,CONFIG_FILE)
 
     if os.path.isdir(HOME):
         if not os.path.exists(CONFIG_FOLDER):
@@ -78,7 +92,7 @@ def helpCmd(full = False):
         print("  config     sets a config parameter\n")
 
 def versionCmd():
-    print("valvis version {0}.{1}.{2}".format(MAJOR,MINOR,FIX))
+    print("valvis version "+VERSION)
 
 def newCmd(newProjectName):
     newProjectPath = CONFIG["projects_path"]+"/"+str(newProjectName)
@@ -91,13 +105,13 @@ def newCmd(newProjectName):
 
         #document structure
         os.makedirs(newProjectPath)
-        os.makedirs(newProjectPath+"/1_blends")
-        os.makedirs(newProjectPath+"/2_textures")
-        os.makedirs(newProjectPath+"/3_references")
-        os.makedirs(newProjectPath+"/4_documents")
-        os.makedirs(newProjectPath+"/5_renders")
-        os.symlink(CONFIG['library_path'],newProjectPath+"/6_library")
-        os.makedirs(newProjectPath+"/.valvis")
+        os.makedirs(os.path.join(newProjectPath,"1_blends"))
+        os.makedirs(os.path.join(newProjectPath,"2_textures"))
+        os.makedirs(os.path.join(newProjectPath,"3_references"))
+        os.makedirs(os.path.join(newProjectPath,"4_documents"))
+        os.makedirs(os.path.join(newProjectPath,"5_renders"))
+        os.symlink(CONFIG['library_path'],os.path.join(newProjectPath,"6_library"))
+        os.makedirs(os.path.join(newProjectPath,".valvis"))
 
         #readme
         newProjectReadMe = "# {0}\n\n{1}\n".format(newProjectName,newProjectDesc)
@@ -112,7 +126,15 @@ To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-
         with open(newProjectPath+"/README.md","w+") as f:
             f.write(newProjectReadMe)
 
-        #default blender file
+        #infos
+        d = date.today();
+        newProjectInfos = {"project_name": newProjectName, "creation_date" : (d.year,d.month,d.day,d.hour,d.minute), "valvis_version" : (MAJOR,MINOR,FIX)}
+        json.dump(newProjectInfos,open(os.path.join(newProjectPath,".valvis","infos.json"), "w+"))
+
+        '''copying blender's default still requires you to save the file a first time, so it's useless'''
+        #shutil.copyfile(CONFIG['blender_config_path']+"/startup.blend",newProjectPath+"/1_blends/"+str(newProjectName)+".blend")
+
+
 
         
         #confirmation
