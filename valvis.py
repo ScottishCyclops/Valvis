@@ -86,10 +86,10 @@ def helpCmd(full = False):
         print("  help       prints this help message\n")
         print("\nproject commands :")
         print("  new       creates a new project")
-        print("  save      creates a full save of current project state")
-        print("  backup    reverts a file to it's last saved state\n")
+        print("  save      creates a full save of current project state -> NOT YET IMPLEMENTED")
+        print("  backup    reverts a file to it's last saved state -> NOT YET IMPLEMENTED\n")
         print("\nconfiguration commands :")
-        print("  config     sets a config parameter\n")
+        print("  config     sets a config parameter -> NOT YET IMPLEMENTED\n")
 
 def versionCmd():
     print("valvis version "+VERSION)
